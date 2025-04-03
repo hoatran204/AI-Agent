@@ -1,6 +1,6 @@
 import streamlit as st
 from model import LLM
-from dotenv import load_dotenv
+
 from common.config import Config
 
 # Set page configuration
