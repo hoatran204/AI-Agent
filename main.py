@@ -1,35 +1,46 @@
 import streamlit as st
-import subprocess
+from model import LLM
+from dotenv import load_dotenv
+from common.config import Config
 
+# Set page configuration
 st.set_page_config(page_title="AI Chatbot", page_icon="🤖")
+st.title("🤖 AI Chatbot with llama-cpp-python")
 
-st.title("🤖 AI Chatbot với Streamlit")
+# Initialize the model (only once)
+@st.cache_resource
+def load_model():
+    model = LLM(config=Config())
+    return model
 
-# Ô nhập cho người dùng
-user_input = st.text_input("Nhập câu hỏi của bạn:")
+# Get or initialize session state for chat history
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
-# Đường dẫn đến llama.cpp (chỉnh lại nếu cần)
-LLAMA_PATH = r"llama.cpp\build\bin\release\llama-cli.exe"
-MODEL_PATH = r"model\model.gguf"
+# Display chat history
+for message in st.session_state.chat_history:
+    role: str = message["role"]
+    content: str = message["content"]
+    with st.chat_message(role):
+        st.write(content)
 
-# Nút gửi yêu cầu
-if st.button("Gửi"):
-    if user_input:
-        # Lệnh chạy Llama.cpp
-        command = [LLAMA_PATH, "-m", MODEL_PATH, "-c", "256", "-p", user_input]
+# Get user input
+user_input = st.chat_input("Ask something:")
 
-        try:
-            # Chạy lệnh bằng subprocess
-            result = subprocess.run(command, capture_output=True, text=True)
-
-            # Kiểm tra kết quả
-            if result.returncode == 0:
-                st.success(f"AI: {result.stdout.strip()}")
-            else:
-                st.error(f"Lỗi khi chạy Llama.cpp: {result.stderr.strip()}")
-
-        except Exception as e:
-            st.error(f"Lỗi hệ thống: {str(e)}")
-
-
-#  ./llama.cpp/build/bin/release/llama-cli.exe -m model/model.gguf -c 256
+if user_input:
+    # Add user message to chat history
+    st.session_state.chat_history.append({"role": "user", "content": user_input})
+    
+    # Display user message
+    with st.chat_message("user"):
+        st.write(user_input)
+    
+    # Generate AI response
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            model = load_model()
+            response = model.generate(user_input)
+            st.write(response)
+    
+    # Add AI response to chat history
+    st.session_state.chat_history.append({"role": "assistant", "content": response})
