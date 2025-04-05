@@ -3,10 +3,10 @@ setup:
 	@echo "Setting up the project environment..."
 	@echo "Installing uv..."
 ifeq ($(OS),Windows_NT)
-	powershell -Command "Invoke-WebRequest -Uri https://windows.ultramarine.io/install.ps1 -OutFile install.ps1; ./install.ps1"
-	uv.exe init
-	uv.exe venv
-	.venv\Scripts\activate.bat && uv.exe pip install -r requirements.txt
+        pip install uv
+	uv init
+	uv venv
+	.venv\Scripts\Activate.ps1 && uv pip install -r requirements.txt
 else
 	curl -sSf https://install.ultramarine.io | sh
 	uv init
